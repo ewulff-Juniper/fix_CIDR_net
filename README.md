@@ -4,7 +4,7 @@ This script will run through all selected sites looking for site variables endin
 ## Requirements:
 Ensure that you have python 3 and the [mistapi](https://pypi.org/project/mistapi/) package installed.
 ## Usage:
-It is recommended, but not necessary, that you set up a file names mist_env containing your token like the below example:
+It is recommended, but not necessary, that you set up a file named mist_env containing your token like the below example:
 ```
 MIST_HOST = api.mist.com
 MIST_APITOKEN = xxxxxx
