@@ -28,6 +28,7 @@ problem_vars = {}
 site_names = {}
 for site_id in site_ids:
     site_settings = mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site_id)
+    if not site_settings.data.has_key('vars'): break
     site_info = mistapi.api.v1.sites.sites.getSiteInfo(mist_session, site_id)
     site_names[site_id] = site_info.data['name']
     problem_vars[site_id] = {}
@@ -57,7 +58,7 @@ for site in problem_vars:
 if UIToolsP3.getBool('Continue? '):
     UIToolsP3.printSubHeader('Pushing new vars...')
     for site in problem_vars:
-        data = {'vars': mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site_id).data['vars']}
+        data = {'vars': mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site).data['vars']}
         for var in problem_vars[site]:
             data['vars'][problem_vars[site][var]['New var']['name']] = problem_vars[site][var]['New var']['value']
         # print(json.dumps(data, indent=4))
