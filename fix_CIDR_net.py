@@ -28,13 +28,17 @@ problem_vars = {}
 site_names = {}
 for site_id in site_ids:
     site_settings = mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site_id)
-    if not site_settings.data.has_key('vars'): break
     site_info = mistapi.api.v1.sites.sites.getSiteInfo(mist_session, site_id)
+    UIToolsP3.printSubHeader('Site: ' + site_info.data['name'])
+    if 'vars' not in site_settings.data or not site_settings.data['vars']:
+        print("Site "+site_info.data['name']+" has no vars")
+        continue
     site_names[site_id] = site_info.data['name']
     problem_vars[site_id] = {}
-    UIToolsP3.printSubHeader('Site: '+site_info.data['name'])
+    found_problem_vars = False
     for var in site_settings.data['vars']:
         if var.endswith('_ip_cidr'):
+            found_problem_vars = True
             print('Found var: '+var+' with value: '+site_settings.data['vars'][var])
             problem_vars[site_id][var[:-8]] = {
                 'Old var': {
@@ -46,21 +50,24 @@ for site_id in site_ids:
                     'value': site_settings.data['vars'][var].split('/')[0]
                 }
             }
+    if not found_problem_vars: print("Site "+site_info.data['name']+" has no problematic vars")
 
 UIToolsP3.printSubHeader('Summary of vars to add')
 print('Important! This script will not delete any vars, it just adds the new ones')
 for site in problem_vars:
-    print(site_names[site]+': ')
-    for var in problem_vars[site]:
-        print('    '+problem_vars[site][var]['Old var']['name']+': '+problem_vars[site][var]['Old var']['value']+' --> '
-              + problem_vars[site][var]['New var']['name']+': '+problem_vars[site][var]['New var']['value'])
+    if problem_vars[site]:
+        print(site_names[site]+': ')
+        for var in problem_vars[site]:
+            print('    '+problem_vars[site][var]['Old var']['name']+': '+problem_vars[site][var]['Old var']['value']+' --> '
+                  + problem_vars[site][var]['New var']['name']+': '+problem_vars[site][var]['New var']['value'])
 
 if UIToolsP3.getBool('Continue? '):
     UIToolsP3.printSubHeader('Pushing new vars...')
     for site in problem_vars:
-        data = {'vars': mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site).data['vars']}
-        for var in problem_vars[site]:
-            data['vars'][problem_vars[site][var]['New var']['name']] = problem_vars[site][var]['New var']['value']
-        # print(json.dumps(data, indent=4))
-        response = mistapi.api.v1.sites.setting.updateSiteSettings(mist_session, site, data)
-        print(site_names[site] + ' status code: '+str(response.status_code))
+        if problem_vars[site]:
+            data = {'vars': mistapi.api.v1.sites.setting.getSiteSetting(mist_session, site).data['vars']}
+            for var in problem_vars[site]:
+                data['vars'][problem_vars[site][var]['New var']['name']] = problem_vars[site][var]['New var']['value']
+            # print(json.dumps(data, indent=4))
+            response = mistapi.api.v1.sites.setting.updateSiteSettings(mist_session, site, data)
+            print(site_names[site] + ' status code: '+str(response.status_code))
